@@ -4,6 +4,7 @@ import {
   loginUser,
   authSelector,
   logout,
+  resetState,
 } from '../auth/authSlice';
 import {
   fetchVoteAsync,
@@ -30,11 +31,13 @@ export function Vote() {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [username, setUserName] = useState('');
   const [password, setPassword] = useState('');
 
   useEffect(()=>{
+    dispatch(resetState())
     dispatch(fetchVoteAsync())
   },[])
 
@@ -42,12 +45,17 @@ export function Vote() {
    
     if (isError) {
       setLoading(false);
+      setError(errorMessage.toString())
     }
 
     if (isSuccess) {
+      setOpen(false);
       setLoading(false);
+      setError(null)
+      setUserName('')
+      setPassword('')
     }
-  }, [isError, isSuccess,setLoading]);
+  }, [isError, isSuccess,errorMessage,setLoading]);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -59,13 +67,16 @@ export function Vote() {
 
 const login = () => {
     if(username && password){
-      setOpen(false);
+      setError(null)
       const data = {
         "username": username,
         "password": password
     };
     setLoading(true);
     dispatch(loginUser(data));
+    }
+    else{
+      setError('Username / Password is required')
     }
   
   };
@@ -112,9 +123,12 @@ const login = () => {
       >
         <DialogTitle>Login</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            
-          </DialogContentText>
+          {error &&
+            <DialogContentText sx={{color:'red'}}>
+           {error.toString()}
+            </DialogContentText>
+          }
+          
           <TextField
             autoFocus
             margin="dense"
@@ -124,9 +138,10 @@ const login = () => {
             fullWidth
             variant="standard"
             value={username}
-            inputProps={
-              { readOnly: true, }
-            }
+            onChange={(e)=>setUserName(e.target.value)}
+            // inputProps={
+            //   { readOnly: true, }
+            // }
           />
 
           <TextField
@@ -137,9 +152,10 @@ const login = () => {
             fullWidth
             variant="standard"
             value={password}
-            inputProps={
-              { readOnly: true, }
-            }
+            onChange={(e)=>setPassword(e.target.value)}
+            // inputProps={
+            //   { readOnly: true, }
+            // }
           />
         </DialogContent>
         <DialogActions>
